@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POWWOW - コース案内＆料金プラン</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            font-size: 16px;
+            transition: font-size 0.3s ease;
+        }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #FFF5F7;
+            color: #5D4037;
+        }
+        /* Custom Button Styling */
+        .phase-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .phase-card:hover {
+            background-color: #FFF0F3;
+        }
+        .phase-card.active-phase {
+            border-left: 6px solid #F4A6B6;
+            background-color: #FFF;
+            box-shadow: 0 4px 10px rgba(244, 166, 182, 0.2);
+        }
+        .step-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            background-color: #F3E5E9;
+            color: #8E5E65;
+        }
+        .active-phase .step-badge {
+            background-color: #F4A6B6;
+            color: white;
+        }
+        /* Pricing card animations */
+        .pricing-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(233, 139, 159, 0.2);
+        }
+        /* Settings panel */
+        .settings-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+            opacity: 0;
+        }
+        .settings-panel.open {
+            max-height: 400px;
+            opacity: 1;
+            padding-bottom: 1.5rem;
+        }
+        .settings-gear {
+            transition: transform 0.3s ease;
+        }
+        .settings-gear.active {
+            transform: rotate(90deg);
+        }
+        /* Subscription plan card hover */
+        .subs-plan {
+            transition: all 0.3s ease;
+        }
+        .subs-plan:hover {
+            transform: translateY(-3px);
+        }
+        /* Shimmer animation */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        /* Course Guide Styling */
+        .course-guide-active {
+            border-color: #F4A6B6 !important;
+            background-color: #FFF9FA !important;
+        }
+        /* Discount Highlight with Yellow Marker Effect */
+        .discount-highlight {
+            color: #E53E3E; /* Strong Red */
+            font-weight: 900;
+            font-size: 1.3em;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+            padding: 0 4px;
+        }
+        .discount-highlight::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 2px;
+            width: 100%;
+            height: 60%;
+            background-color: #FFF176; /* Yellow Marker Color */
+            z-index: -1;
+            transform: rotate(-1deg);
+            opacity: 0.8;
+            border-radius: 2px;
+        }
+        .toggle-section {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #qr-container-A img, #qr-container-B img {
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm py-3 sticky top-0 z-50 border-b border-pink-100">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
+            <div class="flex justify-between items-center w-full md:w-auto">
+                <a href="#" class="flex items-center gap-2">
+                    <img src="logo.png" alt="POWWOW" class="h-20 object-contain" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                    <h1 class="text-4xl font-bold tracking-widest text-[#E98B9F]" style="display:none;">POWWOW</h1>
+                </a>
+            </div>
+           
+            <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                <!-- 文字サイズ変更UI -->
+                <div class="flex items-center gap-1 bg-[#FFF5F7] p-1 rounded-lg border border-pink-100">
+                    <span class="text-xs font-bold text-[#8E5E65] px-2 hidden sm:inline">文字サイズ</span>
+                    <span class="text-xs font-bold text-[#8E5E65] px-2 sm:hidden">文字</span>
+                    <button onclick="changeFontSize('16px', 0)" class="font-size-btn px-3 py-1 bg-white text-[#E98B9F] shadow-sm rounded text-xs font-bold transition-all border border-pink-200">標準</button>
+                    <button onclick="changeFontSize('18px', 1)" class="font-size-btn px-3 py-1 text-[#8E5E65] hover:bg-pink-50 rounded text-sm font-bold transition-all border border-transparent">大</button>
+                    <button onclick="changeFontSize('20px', 2)" class="font-size-btn px-3 py-1 text-[#8E5E65] hover:bg-pink-50 rounded text-base font-bold transition-all border border-transparent">特大</button>
+                </div>
+                <nav class="hidden md:flex space-x-6 text-sm text-[#8E5E65]">
+                    <a href="#roadmap" class="hover:text-[#F4A6B6] transition py-2 px-1">施術ロードマップ</a>
+                    <a href="#pricing" class="hover:text-[#F4A6B6] transition py-2 px-1">料金プラン</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+
+    <main class="flex-grow container mx-auto px-4 py-8 space-y-12">
+        <!-- Intro Section -->
+        <section class="text-center max-w-3xl mx-auto mt-6">
+            <h2 class="text-2xl md:text-3xl font-light mb-6 text-[#5D4037] leading-relaxed">
+                女性の「なんとなく不調」は<br class="md:hidden">仙骨の歪み、自律神経、女性ホルモンや<br>気温・気圧の変化など<br class="md:hidden">さまざまな要因から引き起こされます。
+            </h2>
+            <p class="text-[#8E5E65] leading-relaxed">
+                パウワウではそんな女性に寄り添い、<br>
+                「今」必要なケアと適切なペースをご提案します。
+            </p>
+        </section>
+
+
+        <!-- Roadmap Section -->
+        <section id="roadmap" class="bg-white rounded-3xl p-6 lg:p-8 shadow-md border border-pink-100">
+            <div class="mb-6 border-b border-pink-100 pb-4">
+                <h3 class="text-xl font-bold text-[#E98B9F] flex items-center gap-2">
+                    <span class="text-2xl">01</span> 施術サイクルとホルモンバランス
+                </h3>
+                <p class="text-sm text-gray-500 mt-2">
+                    理想的な来店ペースと、女性ホルモンの波（月経・排卵周期）との関係を確認しましょう。
+                </p>
+            </div>
+
+
+            <div class="grid lg:grid-cols-12 gap-8 items-start">
+                <!-- Left: Controls -->
+                <div class="lg:col-span-4 space-y-4">
+                    <button onclick="updatePhase(0)" id="btn-phase-1" class="phase-card w-full text-left p-4 rounded-xl border border-pink-50 hover:border-pink-200 transition active-phase">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="step-badge">1ヶ月目</span>
+                            <span class="text-xs font-bold text-[#E98B9F]">Step 1</span>
+                        </div>
+                        <h4 class="font-bold text-lg text-[#5D4037]">土台期</h4>
+                        <p id="card-desc-0" class="text-xs text-gray-500 mt-1">まずは凝りをほぐして土台の仙骨を整える時期</p>
+                        <div class="mt-2 text-xs font-bold text-[#F4A6B6] bg-[#FFF5F7] inline-block px-2 py-1 rounded">来店目安: 週に1回</div>
+                    </button>
+
+
+                    <button onclick="updatePhase(1)" id="btn-phase-2" class="phase-card w-full text-left p-4 rounded-xl border border-pink-50 hover:border-pink-200 transition">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="step-badge">2〜3ヶ月目</span>
+                            <span class="text-xs font-bold text-[#E98B9F]">Step 2</span>
+                        </div>
+                        <h4 class="font-bold text-lg text-[#5D4037]">調整期</h4>
+                        <p id="card-desc-1" class="text-xs text-gray-500 mt-1">整えた土台を調節して定着させる時期</p>
+                        <div class="mt-2 text-xs font-bold text-[#F4A6B6] bg-[#FFF5F7] inline-block px-2 py-1 rounded">来店目安: 月に2回</div>
+                    </button>
+
+
+                    <button onclick="updatePhase(2)" id="btn-phase-3" class="phase-card w-full text-left p-4 rounded-xl border border-pink-50 hover:border-pink-200 transition">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="step-badge">4ヶ月目〜</span>
+                            <span class="text-xs font-bold text-[#E98B9F]">Step 3</span>
+                        </div>
+                        <h4 class="font-bold text-lg text-[#5D4037]">メンテナンス期</h4>
+                        <p id="card-desc-2" class="text-xs text-gray-500 mt-1">整えて定着した後に定期的にメンテナンスをする時期</p>
+                        <div class="mt-2 text-xs font-bold text-[#F4A6B6] bg-[#FFF5F7] inline-block px-2 py-1 rounded">来店目安: 月に1回</div>
+                    </button>
+                </div>
+
+
+                <!-- Right: Chart & Details -->
+                <div class="lg:col-span-8 flex flex-col h-full">
+                    <div class="bg-white rounded-xl p-2 mb-4 relative">
+                        <img src="スクリーンショット 2026-03-21 163709.png" alt="施術サイクルとホルモンバランス" class="w-full h-auto rounded-lg shadow-sm border border-pink-50" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="hidden items-center justify-center w-full h-64 bg-gray-50 text-gray-400 rounded-lg border border-dashed border-gray-200 text-sm">
+                            <div class="text-center">
+                                <p>画像が見つかりません</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div id="phase-detail-content" class="bg-[#FFF5F7] p-5 rounded-xl border-l-4 border-[#F4A6B6] flex-grow shadow-inner">
+                        <div class="mb-3">
+                            <h4 id="detail-title" class="font-bold text-lg text-[#5D4037]">土台期</h4>
+                            <p id="detail-text" class="text-sm text-[#8E5E65] mt-2 leading-relaxed"></p>
+                        </div>
+                        <div class="border-t border-dashed border-pink-200 pt-3">
+                            <div class="flex items-start gap-3">
+                                <span class="bg-[#F4A6B6] text-white text-xs font-bold px-2 py-1 rounded mt-1 whitespace-nowrap">Point</span>
+                                <p id="detail-point" class="text-sm text-[#5D4037]"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 料金プラン -->
+        <section id="pricing" class="bg-white rounded-3xl p-6 lg:p-8 shadow-md border border-pink-100 relative">
+            <div class="mb-6 border-b border-pink-100 pb-4 flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-[#E98B9F] flex items-center gap-2">
+                        <span class="text-2xl">02</span> 料金プラン・パッケージのご案内
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-2">
+                        新規のお客様から継続ケアまで、最適なプランをご提案します。
+                    </p>
+                </div>
+                <button onclick="toggleSettings()" class="bg-[#FFF5F7] hover:bg-[#FFE8EE] active:bg-[#FFD6E0] border border-pink-200 rounded-xl w-11 h-11 flex items-center justify-center text-[#E98B9F] transition-all duration-200" title="サブスクの条件設定">
+                    <svg class="w-5 h-5 transition-transform duration-300 settings-gear" id="settingsGear" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+            </div>
+
+
+            <!-- 設定パネル -->
+            <div id="settingsPanel" class="settings-panel bg-[#FFF5F7] rounded-2xl border border-pink-100 mb-6 mt-4">
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-sm font-bold text-[#E98B9F]">サブスク条件設定</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-[#8E5E65] mb-1">平日の来店時間制限</label>
+                            <select id="settingTime" onchange="recalcSubs()" class="w-full bg-white border border-pink-200 rounded-lg p-2 text-sm"><option value="12">12時</option><option value="13">13時</option><option value="14">14時</option><option value="15">15時</option><option value="16" selected>16時</option><option value="17">17時</option><option value="18">18時</option><option value="19">19時</option><option value="20">20時</option></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#8E5E65] mb-1.5">月1回 割引率</label>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="settingDiscount1" value="15" onchange="recalcSubs()" class="w-full bg-white border border-pink-200 rounded-lg px-3 py-2 text-sm">
+                                <span class="text-sm text-[#8E5E65] font-bold">%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#8E5E65] mb-1.5">月2回 割引率</label>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="settingDiscount2" value="30" onchange="recalcSubs()" class="w-full bg-white border border-pink-200 rounded-lg px-3 py-2 text-sm">
+                                <span class="text-sm text-[#8E5E65] font-bold">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="mb-8 bg-[#FFF5F7] p-4 rounded-xl border border-pink-100 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <span class="text-sm font-bold text-[#5D4037] flex items-center">
+                    <svg class="w-4 h-4 mr-1 text-[#E98B9F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    表示するプランを選択
+                </span>
+                <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" checked onchange="toggleVisibility('section-ticket', this.checked)" class="w-5 h-5 accent-[#E98B9F] cursor-pointer">
+                    <span class="text-sm font-medium text-[#8E5E65] group-hover:text-[#E98B9F] transition-colors">回数券</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" checked onchange="toggleVisibility('section-prepaid', this.checked)" class="w-5 h-5 accent-[#E98B9F] cursor-pointer">
+                    <span class="text-sm font-medium text-[#8E5E65] group-hover:text-[#E98B9F] transition-colors">プリペイド</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" checked onchange="toggleVisibility('section-subs', this.checked)" class="w-5 h-5 accent-[#E98B9F] cursor-pointer">
+                    <span class="text-sm font-medium text-[#8E5E65] group-hover:text-[#E98B9F] transition-colors">サブスクリプション</span>
+                </label>
+            </div>
+
+
+            <!-- 回数券 -->
+            <div id="section-ticket" class="mb-12 toggle-section">
+                <h4 class="text-lg font-bold text-[#5D4037] border-b-2 border-[#F4A6B6] pb-2 mb-6 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-[#E98B9F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                    回数券パッケージ
+                </h4>
+                <div class="bg-white border border-[#F4A6B6] rounded-2xl p-6 shadow-sm max-w-2xl mx-auto text-center relative">
+                    <div class="absolute top-0 right-0 bg-[#FFF5F7] text-[#E98B9F] text-xs font-bold px-4 py-1.5 rounded-bl-xl border-b border-l border-pink-100">※有効期限2カ月間</div>
+                    <span class="inline-block bg-[#F4A6B6] text-white font-bold px-4 py-1 rounded-full text-sm mb-4 mt-2">土台期応援プラン 70分整体3回券</span>
+                    <div class="bg-[#FFF5F7] p-6 rounded-2xl mb-6 relative">
+                        <div class="absolute -top-3 -right-2 bg-[#E53E3E] text-white text-xs font-bold px-3 py-1 rounded-full transform rotate-12 shadow-sm">15% OFF</div>
+                        <div class="text-sm text-gray-500 line-through">通常 31,920円</div>
+                        <div class="text-4xl font-black text-[#E98B9F] my-2">27,000<span class="text-xl">円</span></div>
+                        <div class="text-[#E53E3E] font-bold text-sm">4,920円もおトク！</div>
+                    </div>
+                    <div class="flex justify-center items-center gap-2 text-xs text-[#8E5E65] overflow-x-auto pb-2">
+                        <div class="bg-white border p-2 rounded-lg min-w-[70px]">初回</div>
+                        <svg class="w-4 h-4 text-pink-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <div class="bg-white border p-2 rounded-lg min-w-[70px]">1週間後<br>2回目</div>
+                        <svg class="w-4 h-4 text-pink-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <div class="bg-white border p-2 rounded-lg min-w-[70px]">2週間後<br>3回目</div>
+                        <svg class="w-4 h-4 text-pink-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <div class="bg-white border p-2 rounded-lg min-w-[70px]">3週間後<br>4回目</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- プリペイド -->
+            <div id="section-prepaid" class="mb-12 toggle-section">
+                <h4 class="text-lg font-bold text-[#5D4037] border-b-2 border-[#F4A6B6] pb-2 mb-6 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-[#E98B9F]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    プリペイド
+                </h4>
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-4">
+                    <p class="text-sm text-gray-500">その日の気分や体調に合わせてコースを選びたい方に。</p>
+                    <span class="inline-block w-fit text-xs font-bold text-[#E98B9F] bg-[#FFF5F7] px-3 py-1.5 rounded-full border border-pink-100 shadow-sm">※有効期限半年</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white border border-pink-100 p-6 rounded-2xl text-center">
+                        <div class="text-xs font-bold text-gray-400 mb-1">販売価格</div>
+                        <div class="text-2xl font-bold mb-4">30,000円</div>
+                        <div class="text-sm font-bold text-[#8E5E65] mb-2">プリペイド支払いで</div>
+                        <div class="bg-red-50 text-red-500 font-bold py-2 rounded-lg">施術代 5% OFF</div>
+                    </div>
+                    <div class="bg-white border-2 border-[#F4A6B6] p-6 rounded-2xl text-center relative transform md:scale-105 shadow-md">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#F4A6B6] text-white text-[10px] px-3 py-1 rounded-full">一番人気</div>
+                        <div class="text-xs font-bold text-gray-400 mb-1 mt-1">販売価格</div>
+                        <div class="text-2xl font-bold mb-4">50,000円</div>
+                        <div class="text-sm font-bold text-[#8E5E65] mb-2">プリペイド支払いで</div>
+                        <div class="bg-red-50 text-red-500 font-bold py-2 rounded-lg">施術代 10% OFF</div>
+                    </div>
+                    <div class="bg-white border border-pink-100 p-6 rounded-2xl text-center">
+                        <div class="text-xs font-bold text-gray-400 mb-1">販売価格</div>
+                        <div class="text-2xl font-bold mb-4">100,000円</div>
+                        <div class="text-sm font-bold text-[#8E5E65] mb-2">プリペイド支払いで</div>
+                        <div class="bg-red-50 text-red-500 font-bold py-2 rounded-lg">施術代 15% OFF</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- サブスクリプション -->
+            <div id="section-subs" class="toggle-section">
+                <div class="text-center mb-8">
+                    <div class="inline-block bg-[#E98B9F] text-white font-bold px-8 py-3 rounded-full shadow-lg animate-bounce">
+                        一番お得に通える！定額プラン
+                    </div>
+                </div>
+
+
+                <div class="bg-white rounded-3xl overflow-hidden border border-pink-100 shadow-xl">
+                    <div class="bg-gradient-to-r from-[#E98B9F] to-[#D47A8D] p-5 text-white text-center">
+                        <h4 class="text-xl font-bold">サブスク（月額定額プラン）</h4>
+                        <p class="text-sm opacity-90 mt-1"><span id="subsCourseLabel">スタンダード 80</span>分整体コース</p>
+                    </div>
+
+
+                    <div class="p-6">
+                        <!-- コース選択タブ -->
+                        <div class="flex bg-[#FFF5F7] rounded-full p-1 mb-6 max-w-md mx-auto border border-pink-100 relative">
+                            <button onclick="selectCourse(50)" id="btn-50" class="flex-1 py-2 rounded-full text-sm font-bold transition-all relative">
+                                ライト 50分
+                            </button>
+                            <button onclick="selectCourse(80)" id="btn-80" class="flex-1 py-2 rounded-full text-sm font-bold transition-all relative">
+                                スタンダード 80分
+                                <span class="absolute -top-3 -right-2 bg-amber-400 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm border border-white whitespace-nowrap">一番人気！</span>
+                            </button>
+                            <button onclick="selectCourse(110)" id="btn-110" class="flex-1 py-2 rounded-full text-sm font-bold transition-all relative">
+                                スペシャル 110分
+                            </button>
+                        </div>
+
+
+                        <!-- コース説明文 -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+                            <div id="guide-50" class="bg-white border border-pink-100 rounded-2xl p-4 text-center transition-all duration-300">
+                                <h4 class="font-bold text-sm text-[#5D4037] mb-1">ライト 50分</h4>
+                                <p class="text-[11px] text-[#8E5E65] leading-relaxed font-medium">休憩中の時短ケアに！</p>
+                            </div>
+                            <div id="guide-80" class="bg-white border border-pink-100 rounded-2xl p-4 text-center transition-all duration-300">
+                                <h4 class="font-bold text-sm text-[#5D4037] mb-1">スタンダード 80分</h4>
+                                <p class="text-[11px] text-[#8E5E65] leading-relaxed font-medium">全身をしっかりケアに！オイルとの組み合わせも可能。</p>
+                            </div>
+                            <div id="guide-110" class="bg-white border border-pink-100 rounded-2xl p-4 text-center transition-all duration-300">
+                                <h4 class="font-bold text-sm text-[#5D4037] mb-1">スペシャル 110分</h4>
+                                <p class="text-[11px] text-[#8E5E65] leading-relaxed font-medium">最大限の結果を出したい方の贅沢プラン♪</p>
+                            </div>
+                        </div>
+
+
+                        <div class="text-center mb-6">
+                            <span class="inline-block bg-pink-50 text-[#E98B9F] text-xs font-bold px-4 py-1.5 rounded-full border border-pink-100">
+                                平日<span id="subsTimeLabel">16</span>時までのご来店で
+                            </span>
+                        </div>
+
+
+                        <!-- Notice Area -->
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3 shadow-sm">
+                            <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                            <div class="text-xs sm:text-sm text-amber-900 leading-relaxed font-medium space-y-1">
+                                <p>※施術時間の中にお着替え時間も含みます。<br class="sm:hidden">動きやすい服装であればお着替え不要です。</p>
+                                <p>※オイルと組み合わせの場合は施術時間が10分短くなります。</p>
+                            </div>
+                        </div>
+
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- プランA: 月2回 -->
+                            <div class="border-2 border-[#E98B9F] rounded-3xl p-6 text-center bg-white shadow-sm flex flex-col">
+                                <div class="bg-[#E98B9F] text-white text-[10px] font-bold py-1 px-4 rounded-full w-fit mx-auto -mt-9 mb-6 shadow-sm">断然おすすめ！</div>
+                                <h5 class="font-bold text-lg mb-2">月2回プラン</h5>
+                                <p class="text-xs text-gray-400 mb-1 line-through"><span id="subsBaseA">12,160</span>円/回</p>
+                                <div class="text-4xl font-black text-[#E98B9F] mb-3">
+                                    <span id="subsPriceA">8,512</span><span class="text-sm">円/回</span>
+                                </div>
+                                <div class="text-[#E53E3E] font-black text-xl bg-[#FFF5F7] py-2 mb-4 rounded-lg border border-pink-50 shadow-sm mx-2">
+                                    <span id="subsDiscountALabel">30</span>% OFF
+                                </div>
+                                <div class="bg-[#FFF5F7] p-3 rounded-xl mb-6">
+                                    <div class="text-[10px] text-gray-500">月額合計</div>
+                                    <div class="text-xl font-bold"><span id="subsTotalA">17,024</span>円</div>
+                                </div>
+                                <div class="mt-auto border-t border-dashed border-pink-100 pt-6">
+                                    <p class="text-xs font-bold text-gray-400 mb-3">＼こちらからお申し込み／</p>
+                                    <div id="qr-container-A" class="bg-white p-2 inline-block border border-gray-100 rounded-lg shadow-inner mb-2"></div>
+                                    <div class="text-[9px] text-gray-300 break-all px-4" id="url-text-A"></div>
+                                </div>
+                            </div>
+
+
+                            <!-- プランB: 月1回 -->
+                            <div class="border border-pink-100 rounded-3xl p-6 text-center bg-white shadow-sm flex flex-col">
+                                <h5 class="font-bold text-lg mb-2">月1回プラン</h5>
+                                <p class="text-xs text-gray-400 mb-1 line-through"><span id="subsBaseB">12,160</span>円/回</p>
+                                <div class="text-4xl font-black text-[#E98B9F] mb-3">
+                                    <span id="subsPriceB">10,336</span><span class="text-sm">円/回</span>
+                                </div>
+                                <div class="text-[#E53E3E] font-black text-xl bg-[#FFF5F7] py-2 mb-4 rounded-lg border border-pink-50 shadow-sm mx-2">
+                                    <span id="subsDiscountBLabel">15</span>% OFF
+                                </div>
+                                <div class="bg-[#FFF5F7] p-3 rounded-xl mb-6">
+                                    <div class="text-[10px] text-gray-500">月額合計</div>
+                                    <div class="text-xl font-bold"><span id="subsTotalB">10,336</span>円</div>
+                                </div>
+                                <div class="mt-auto border-t border-dashed border-pink-100 pt-6">
+                                    <p class="text-xs font-bold text-gray-400 mb-3">＼こちらからお申し込み／</p>
+                                    <div id="qr-container-B" class="bg-white p-2 inline-block border border-gray-100 rounded-lg shadow-inner mb-2"></div>
+                                    <div class="text-[9px] text-gray-300 break-all px-4" id="url-text-B"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+
+    <script>
+        const PRICES = { 50: 7600, 80: 12160, 110: 16720 };
+        const COURSE_NAMES = { 50: "ライト", 80: "スタンダード", 110: "スペシャル" };
+        const LINKS = {
+            A: { // 月2回
+                50: "https://web.online.airpayment.jp/payment?planId=PL0dek8WJXi5mSA699",
+                80: "https://web.online.airpayment.jp/payment?planId=PLsMJyHCzvshKqdlB1",
+                110: "https://web.online.airpayment.jp/payment?planId=PLA9j5VnwMx7pXvFe9"
+            },
+            B: { // 月1回
+                50: "https://web.online.airpayment.jp/payment?planId=PLmfR2Cd2Q5WMwFVgX",
+                80: "https://web.online.airpayment.jp/payment?planId=PLbJH49VglNhIb4JTA",
+                110: "https://web.online.airpayment.jp/payment?planId=PLF0iUUaCGpj5V6NK7"
+            }
+        };
+
+
+        let currentCourse = 80;
+        let qrA, qrB;
+
+
+        window.onload = () => {
+            qrA = new QRCode(document.getElementById("qr-container-A"), { width: 120, height: 120 });
+            qrB = new QRCode(document.getElementById("qr-container-B"), { width: 120, height: 120 });
+            selectCourse(80);
+            updatePhase(0);
+        };
+
+
+        function changeFontSize(size, btnIndex) {
+            document.documentElement.style.fontSize = size;
+           
+            document.querySelectorAll('.font-size-btn').forEach((btn, idx) => {
+                if (idx === btnIndex) {
+                    btn.classList.add('bg-white', 'text-[#E98B9F]', 'shadow-sm', 'border-pink-200');
+                    btn.classList.remove('text-[#8E5E65]', 'border-transparent', 'hover:bg-pink-50');
+                } else {
+                    btn.classList.remove('bg-white', 'text-[#E98B9F]', 'shadow-sm', 'border-pink-200');
+                    btn.classList.add('text-[#8E5E65]', 'border-transparent', 'hover:bg-pink-50');
+                }
+            });
+        }
+
+
+        function selectCourse(min) {
+            currentCourse = min;
+            [50, 80, 110].forEach(m => {
+                const btn = document.getElementById(`btn-${m}`);
+                const guide = document.getElementById(`guide-${m}`);
+               
+                if (m === min) {
+                    btn.className = "flex-1 py-2 rounded-full text-sm font-bold bg-[#E98B9F] text-white shadow-md relative";
+                    if(guide) {
+                        guide.classList.add('course-guide-active', 'border-2', 'shadow-sm');
+                        guide.classList.remove('border-pink-100');
+                    }
+                } else {
+                    btn.className = "flex-1 py-2 rounded-full text-sm font-bold text-[#8E5E65] hover:bg-white relative";
+                    if(guide) {
+                        guide.classList.remove('course-guide-active', 'border-2', 'shadow-sm');
+                        guide.classList.add('border', 'border-pink-100');
+                    }
+                }
+            });
+            recalcSubs();
+        }
+
+
+        function recalcSubs() {
+            const base = PRICES[currentCourse];
+            const courseName = COURSE_NAMES[currentCourse];
+            const time = document.getElementById('settingTime')?.value || 16;
+            const discount1 = parseInt(document.getElementById('settingDiscount1')?.value || 15);
+            const discount2 = parseInt(document.getElementById('settingDiscount2')?.value || 30);
+
+
+            document.getElementById('subsCourseLabel').innerText = `${courseName} ${currentCourse}`;
+            if(document.getElementById('subsTimeLabel')) document.getElementById('subsTimeLabel').innerText = time;
+           
+            if(document.getElementById('subsDiscountALabel')) document.getElementById('subsDiscountALabel').innerText = discount2;
+            if(document.getElementById('subsDiscountBLabel')) document.getElementById('subsDiscountBLabel').innerText = discount1;
+
+
+            // Plan A
+            const priceA = Math.floor(base * (1 - discount2 / 100));
+            document.getElementById('subsBaseA').innerText = base.toLocaleString();
+            document.getElementById('subsPriceA').innerText = priceA.toLocaleString();
+            document.getElementById('subsTotalA').innerText = (priceA * 2).toLocaleString();
+            const urlA = LINKS.A[currentCourse];
+            qrA.makeCode(urlA);
+            document.getElementById('url-text-A').innerText = urlA;
+
+
+            // Plan B
+            const priceB = Math.floor(base * (1 - discount1 / 100));
+            document.getElementById('subsBaseB').innerText = base.toLocaleString();
+            document.getElementById('subsPriceB').innerText = priceB.toLocaleString();
+            document.getElementById('subsTotalB').innerText = priceB.toLocaleString();
+            const urlB = LINKS.B[currentCourse];
+            qrB.makeCode(urlB);
+            document.getElementById('url-text-B').innerText = urlB;
+        }
+
+
+        const phaseDetails = [
+            {
+                title: "土台期",
+                desc: "まずは凝りをほぐして土台の仙骨を整える時期です。筋肉の硬さと骨格の歪みをしっかりケアし、正しいバランスの基礎を作ります。間隔を空けずに施術することが理想的です。",
+                point: "初回〜3回目：可動域・歪みをチェック. 仙骨周りを集中的にケアし、自律神経やホルモンバランスを整える土台を作ります。"
+            },
+            {
+                title: "調整期",
+                desc: "整えた土台を調節して定着させる時期です。筋肉がほぐれやすくなっているため、悪い姿勢のクセを抜き、良い状態を体に覚え込ませていきます。",
+                point: "4〜5回目：ほぐれが良くなってきたタイミング。「猫背矯正」などを組み合わせ、整った状態を「定着」させていきましょう。"
+            },
+            {
+                title: "メンテナンス期",
+                desc: "整えて定着した後に定期的にメンテナンスをする時期です。良い状態を維持し、日々の疲れをリセット。不調が出にくい身体をキープします。",
+                point: "6回目以降：月に1回程度のペースで、その時の身体の状態に合わせたケアを継続しましょう。"
+            }
+        ];
+
+
+        function updatePhase(index) {
+            document.querySelectorAll('.phase-card').forEach((btn, i) => {
+                btn.classList.toggle('active-phase', i === index);
+            });
+            const detail = phaseDetails[index];
+            document.getElementById('detail-title').innerText = detail.title;
+            document.getElementById('detail-text').innerText = detail.desc;
+            document.getElementById('detail-point').innerText = detail.point;
+        }
+
+
+        function toggleSettings() {
+            document.getElementById('settingsPanel').classList.toggle('open');
+            document.getElementById('settingsGear').classList.toggle('active');
+        }
+
+
+        function toggleVisibility(sectionId, isVisible) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                if (isVisible) {
+                    section.style.display = 'block';
+                    setTimeout(() => { section.style.opacity = '1'; section.style.transform = 'translateY(0)'; }, 10);
+                } else {
+                    section.style.opacity = '0';
+                    section.style.transform = 'translateY(-10px)';
+                    setTimeout(() => { section.style.display = 'none'; }, 300);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
